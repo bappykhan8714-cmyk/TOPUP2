@@ -68,6 +68,7 @@ body.dk .hd,body.dk nav{background:#14141a;border-color:#2c2c36}body.dk nav butt
 <div class="hd"><div class="av" id="av"></div><div><b id="nm">Shop</b><small><span class="dot"></span>Online · Auto Payment</small></div><div class="ver">VERIFIED</div></div>
 
 <section id="buy" class="on in">
+  <div id="notice" class="gar" style="display:none;margin:12px 0 0"></div>
   <h3>Player UID</h3>
   <input id="uid" inputmode="numeric" placeholder="আপনার Free Fire UID লিখুন">
   <div class="hint">কমপক্ষে ৮ ডিজিটের UID দিন</div>
@@ -96,22 +97,17 @@ body.dk .hd,body.dk nav{background:#14141a;border-color:#2c2c36}body.dk nav butt
   <div class="box" style="text-align:center"><div style="font-size:40px">💬</div><b id="sup" style="font-size:20px">@admin</b>
     <p style="color:var(--mute);margin:4px 0 12px">যেকোনো সমস্যায় সরাসরি এডমিনের সাথে কথা বলুন</p>
     <button class="btn" style="background:var(--blue)" onclick="tg.openTelegramLink('https://t.me/'+SUP)">💬 সরাসরি এডমিনকে ইনবক্স করুন</button></div>
-  <div class="gar"><b>⏱ ডেলিভারি সময়</b><div>পেমেন্ট সফল হওয়ার পর অর্ডার প্রসেস করা হবে এবং ডেলিভারি হলে আপনি Telegram-এ মেসেজ পাবেন।</div></div>
+  <div class="gar"><b>⏱ ডেলিভারি সময়</b><div id="gartxt"></div></div>
   <h3>FAQ</h3>
-  <div class="box" style="padding:6px 14px">
-    <details><summary>UID দিলে কি আমার অ্যাকাউন্ট নিরাপদ থাকবে?</summary><p>হ্যাঁ। শুধু UID লাগে, পাসওয়ার্ড বা লগইন তথ্য কখনো চাওয়া হয় না।</p></details>
-    <details><summary>ডায়মন্ড পেতে কত সময় লাগে?</summary><p>পেমেন্ট নিশ্চিত হওয়ার পর অর্ডার প্রসেস হয়। দেরি হলে সাপোর্টে জানান।</p></details>
-    <details><summary>পেমেন্ট হয়েছে কিন্তু স্ট্যাটাস পেন্ডিং দেখাচ্ছে কেন?</summary><p>গেটওয়ে নিশ্চিত করতে কিছুক্ষণ লাগে। রিফ্রেশ করুন, না বদলালে অর্ডার নম্বরসহ সাপোর্টে জানান।</p></details>
-    <details><summary>রিফান্ড পলিসি কী?</summary><p>ভুল UID-তে ডেলিভারি হলে রিফান্ড হয় না। অন্য সমস্যায় সাপোর্টে যোগাযোগ করুন।</p></details>
-  </div>
+  <div class="box" style="padding:6px 14px" id="faq"></div>
 </section>
 
 <section id="add" class="in">
   <div id="a1">
     <div class="bal">Balance: <b id="bal">৳0</b></div>
     <h3 class="mt" style="text-transform:none;color:var(--ink);letter-spacing:0">Select Payment Method</h3>
-    <button class="meth" onclick="pickM('bkash')"><div class="logo" style="background:#e2136e">b</div><div><b>bKash</b><small>Personal Account</small></div><em>›</em></button>
-    <button class="meth" onclick="pickM('nagad')"><div class="logo" style="background:#f6821f">N</div><div><b>Nagad</b><small>Personal Account</small></div><em>›</em></button>
+    <button class="meth" id="m_bkash" onclick="pickM('bkash')"><div class="logo" style="background:#e2136e">b</div><div><b>bKash</b><small>Personal Account</small></div><em>›</em></button>
+    <button class="meth" id="m_nagad" onclick="pickM('nagad')"><div class="logo" style="background:#f6821f">N</div><div><b>Nagad</b><small>Personal Account</small></div><em>›</em></button>
     <h3 style="font-size:22px;color:var(--ink);letter-spacing:0">Deposit History</h3>
     <div id="dh"></div>
   </div>
@@ -173,7 +169,7 @@ document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>{
   if(b.dataset.t==='orders')loadOrders();
   if(b.dataset.t==='add'){backM();loadMe()}
 });
-fetch('/api/config').then(r=>r.json()).then(c=>{CFG=c;SUP=c.support;$('sup').textContent='@'+c.support;$('nm').textContent=c.name;$('av').textContent=c.name.slice(0,1).toUpperCase();document.title=c.name});
+fetch('/api/config').then(r=>r.json()).then(applyCfg);
 const MN={bkash:{n:'bKash',dial:'*247#',c:'#e2136e'},nagad:{n:'Nagad',dial:'*167#',c:'#f6821f'}};
 function pickM(m){M=m;$('a1').style.display='none';$('a2').style.display='block';$('derr').textContent='';
   $('mname').textContent=MN[m].n+' Personal';$('dial').textContent=`${MN[m].dial} ডায়াল করুন অথবা ${MN[m].n} অ্যাপ খুলুন।`;
@@ -190,6 +186,19 @@ async function submitDep(){
   const r=await fetch('/api/deposits',{method:'POST',headers:H,body:JSON.stringify({method:M,amount:$('damt').value,trxId:$('dtrx').value})});
   const j=await r.json();if(!r.ok){$('derr').textContent=j.error;return}
   $('damt').value=$('dtrx').value='';tg.showAlert('জমা হয়েছে। যাচাইয়ের পর ব্যালেন্সে যোগ হবে।');backM();loadMe();
+}
+function applyCfg(c){
+  CFG=c;SUP=c.support;
+  $('sup').textContent='@'+c.support;
+  $('nm').textContent=c.shop_name;document.title=c.shop_name;
+  $('av').textContent=(c.shop_name||'S').slice(0,1).toUpperCase();$('av').style.backgroundImage='';
+  if(/^https?:\/\//.test(c.avatar||'')){$('av').style.backgroundImage='url("'+c.avatar.replace(/"/g,'%22')+'")';$('av').textContent=''}
+  $('notice').style.display=c.notice?'block':'none';$('notice').textContent=c.notice||'';
+  $('gartxt').textContent=c.delivery_note||'';
+  const fq=$('faq');fq.textContent='';
+  (c.faq||'').split('\n').forEach(l=>{const i=l.indexOf('|');if(i<1)return;const d=document.createElement('details'),s=document.createElement('summary'),p=document.createElement('p');s.textContent=l.slice(0,i).trim();p.textContent=l.slice(i+1).trim();d.append(s,p);fq.append(d)});
+  ['bkash','nagad'].forEach(m=>{$('m_'+m).style.display=c[m]?'':'none'});
+  $('damt').placeholder='কত টাকা পাঠিয়েছেন (৳'+c.min_deposit+' – ৳'+c.max_deposit+')';
 }
 loadPkgs();loadMe();
 </script>

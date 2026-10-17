@@ -8,7 +8,7 @@
 :root{--bg:#f3f4f7;--card:#fff;--ink:#16202e;--line:#dde3ec;--acc:#4f3df0}
 @media(prefers-color-scheme:dark){:root{--bg:#10141c;--card:#192030;--ink:#eaf0fa;--line:#2a3447;--acc:#8b7bff}}
 *{box-sizing:border-box}body{margin:0;padding:14px;background:var(--bg);color:var(--ink);font:15px system-ui,sans-serif;max-width:760px;margin:auto}
-input,select,button{padding:9px;border:1px solid var(--line);border-radius:8px;background:var(--card);color:var(--ink);font:inherit}
+input,select,button,textarea{padding:9px;border:1px solid var(--line);border-radius:8px;background:var(--card);color:var(--ink);font:inherit}
 button{cursor:pointer}button.p{background:var(--acc);color:#fff;border:0}
 .card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px;margin:10px 0}
 .r{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin:6px 0}.r input{flex:1;min-width:80px}
@@ -19,7 +19,7 @@ button{cursor:pointer}button.p{background:var(--acc);color:#fff;border:0}
 <div class="r"><input id="tok" type="password" placeholder="Admin token"><button class="p" onclick="login(this)">Login</button></div>
 <div id="msg" style="color:#e11d48;font-weight:600;margin:8px 2px"></div>
 <div id="app" class="hide">
-  <div class="r tabs"><button id="t1" class="on" onclick="tab(1)">প্যাকেজ ও দাম</button><button id="t2" onclick="tab(2)">অর্ডার</button><button id="t3" onclick="tab(3)">ডিপোজিট</button></div>
+  <div class="r tabs"><button id="t1" class="on" onclick="tab(1)">প্যাকেজ ও দাম</button><button id="t2" onclick="tab(2)">অর্ডার</button><button id="t3" onclick="tab(3)">ডিপোজিট</button><button id="t4" onclick="tab(4)">সেটিংস</button></div>
   <div id="p1">
     <div class="card"><b>নতুন প্যাকেজ</b>
       <div class="r"><input id="nl" placeholder="ডায়মন্ড (যেমন 10000)"><input id="np" type="number" placeholder="দাম (৳)"><button class="p" onclick="addPkg()">যোগ করুন</button></div></div>
@@ -27,6 +27,7 @@ button{cursor:pointer}button.p{background:var(--acc);color:#fff;border:0}
   </div>
   <div id="p2" class="hide"><div id="olist"></div></div>
   <div id="p3" class="hide"><div id="dlist"></div></div>
+  <div id="p4" class="hide"><div id="slist"></div></div>
 </div>
 <script>
 let T=localStorage.getItem('at')||'';{const tk=document.getElementById('tok');if(tk)tk.value=T}
@@ -46,13 +47,14 @@ async function login(btn){
     say(e.message==='401'?'টোকেন ভুল (Render-এর ADMIN_TOKEN-এর সাথে মেলেনি)':e.message==='404'?'সার্ভারে পুরোনো ভার্সন চলছে, নতুন কোড আবার ডিপ্লয় করুন':'এরর: '+e.message);
   }
 }
-function tab(n){[1,2,3].forEach(i=>{$('p'+i).classList.toggle('hide',i!=n);$('t'+i).classList.toggle('on',i==n)});load()}
+function tab(n){[1,2,3,4].forEach(i=>{$('p'+i).classList.toggle('hide',i!=n);$('t'+i).classList.toggle('on',i==n)});load()}
 async function load(){try{await load2()}catch(e){say('লোড হয়নি: '+e.message+(e.message==='404'?' — নতুন কোড ডিপ্লয় করুন':''))}}
 async function load2(){
   const ps=await api('packages');
   $('plist').innerHTML=ps.map(p=>`<div class="card r" data-id="${p.id}"><input class="l" value="${p.label}"><input class="pr" type="number" value="${p.price}">
     <select class="a"><option value="1" ${p.active?'selected':''}>চালু</option><option value="0" ${p.active?'':'selected'}>বন্ধ</option></select>
     <button class="p" onclick="save(this)">সেভ</button><button onclick="del(${p.id})">মুছুন</button></div>`).join('');
+  if(!document.activeElement||!String(document.activeElement.id).startsWith('s_'))renderSettings(await api('settings'));
   const ds=await api('deposits');
   $('dlist').innerHTML=ds.map(d=>`<div class="card"><b>#${d.id}</b> ${d.method} — <b>${d.amount}৳</b><br>TrxID: <b>${d.trx_id}</b> · TG ${d.tg_id}<div class="r"><span>${d.status}</span>${d.status=='pending'?`<button class="p" onclick="depAct(${d.id},'approve')">Approve</button><button onclick="depAct(${d.id},'reject')">Reject</button>`:''}</div></div>`).join('')||'ডিপোজিট নেই';
   const os=await api('orders');
@@ -63,6 +65,12 @@ async function save(b){const c=b.closest('.card');await api('packages','POST',{i
 async function del(id){if(confirm('মুছবেন?')){await api('packages/'+id,'DELETE');load()}}
 async function addPkg(){await api('packages','POST',{label:$('nl').value,price:+$('np').value});$('nl').value=$('np').value='';load()}
 async function depAct(id,act){if(act=='approve'&&!confirm('bKash/Nagad SMS-এ TrxID ও টাকা মিলিয়ে দেখেছেন?'))return;await api(`deposits/${id}/${act}`,'POST',{});load()}
+const SF=[['shop_name','দোকানের নাম'],['avatar','লোগো/ছবির লিংক (https://… দিয়ে শুরু)'],['support','সাপোর্ট Telegram ইউজারনেম (@ ছাড়া)'],['bkash','bKash নম্বর (ফাঁকা রাখলে bKash লুকানো থাকবে)'],['nagad','Nagad নম্বর (ফাঁকা রাখলে Nagad লুকানো থাকবে)'],['min_deposit','সর্বনিম্ন ডিপোজিট (৳)'],['max_deposit','সর্বোচ্চ ডিপোজিট (৳)'],['notice','ঘোষণা (প্যাকেজ পেজের উপরে দেখাবে, ফাঁকা রাখলে লুকানো)','t'],['delivery_note','ডেলিভারি/গ্যারান্টির লেখা','t'],['faq','FAQ: প্রতি লাইনে একটা, এভাবে: প্রশ্ন|উত্তর','t']];
+function renderSettings(s){
+  $('slist').innerHTML=SF.map(([k,l,t])=>`<div class="card"><label for="s_${k}"><b>${l}</b></label><div class="r">${t?`<textarea id="s_${k}" rows="${k=='faq'?8:3}" style="width:100%"></textarea>`:`<input id="s_${k}">`}</div></div>`).join('')+'<button class="p" style="width:100%;padding:14px" onclick="saveSettings()">সব সেভ করুন</button>';
+  SF.forEach(([k])=>{$('s_'+k).value=s[k]??''});
+}
+async function saveSettings(){const b={};SF.forEach(([k])=>b[k]=$('s_'+k).value);try{await api('settings','POST',b);say('✅ সেভ হয়েছে, ইউজার পেজে এখনই কাজ করবে')}catch(e){say('সেভ হয়নি: '+e.message)}}
 async function setSt(id,s){await api(`orders/${id}/status`,'POST',{status:s})}
 if(T)login();
 </script>
