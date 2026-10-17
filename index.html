@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Shop</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<style>
+:root{--bg:#f7f9fc;--card:#fff;--ink:#111a2e;--mute:#7b879a;--line:#e1e6ef;--blue:#2563eb;--price:#c2410c;--green:#059669}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 system-ui,"Noto Sans Bengali",sans-serif;padding-bottom:210px}
+.hd{display:flex;align-items:center;gap:14px;padding:16px;background:#fff;border-bottom:1px solid var(--line)}
+.av{width:62px;height:62px;border-radius:50%;border:3px solid var(--blue);background:#222 center/cover;display:grid;place-items:center;color:#fff;font-weight:800;font-size:22px}
+.hd b{font-size:22px}.hd small{display:block;color:var(--mute)}.dot{display:inline-block;width:9px;height:9px;border-radius:50%;background:#10b981;margin-right:6px}
+.ver{margin-left:auto;border:1px solid #a7f3d0;background:#ecfdf5;color:var(--green);padding:6px 14px;border-radius:20px;font-weight:700;font-size:14px}
+.in{padding:0 14px}
+h3{font-size:14px;letter-spacing:.5px;color:#475569;margin:18px 2px 8px;text-transform:uppercase}
+input{width:100%;padding:16px;border:1px solid var(--line);border-radius:16px;background:#fff;font-size:17px;color:var(--ink)}
+input:focus,button:focus-visible{outline:2px solid var(--blue)}
+.hint{color:var(--mute);font-size:14px;margin:6px 2px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.pkg{position:relative;text-align:left;background:#fff;border:1px solid var(--line);border-radius:18px;padding:16px;font:inherit;color:var(--ink);cursor:pointer}
+.pkg b{display:block;font-size:22px}.pkg i{display:block;font-style:normal;color:var(--mute);font-size:14px;letter-spacing:.5px}
+.pkg span{color:var(--price);font-weight:800;font-size:22px}
+.pkg:after{content:"";position:absolute;top:14px;right:14px;width:22px;height:22px;border-radius:50%;border:1.5px solid var(--line)}
+.pkg.on{border-color:var(--blue);box-shadow:0 0 0 3px #dbeafe}.pkg.on:after{background:var(--blue);border-color:var(--blue)}
+.sum{border:1.5px dashed var(--line);border-radius:18px;padding:16px;background:#fbfcfe}
+.sum div{display:flex;justify-content:space-between;margin:6px 0}.sum .t{color:var(--price);font-weight:800;font-size:22px}
+.note{color:#475569;font-size:15px;margin-top:10px}
+.pill{display:inline-block;padding:6px 12px;border-radius:20px;color:#fff;font-weight:700;font-size:13px;margin:8px 6px 0 0}
+.go{position:fixed;left:14px;right:14px;bottom:118px;padding:18px;border:0;border-radius:18px;background:var(--blue);color:#fff;font-size:18px;font-weight:800;box-shadow:0 8px 20px #2563eb44}
+.go:disabled{opacity:.5}
+nav{position:fixed;left:14px;right:14px;bottom:calc(10px + env(safe-area-inset-bottom));display:flex;gap:6px;background:#fff;border:1px solid var(--line);border-radius:24px;padding:8px}
+nav button{flex:1;padding:12px 6px;border:0;border-radius:18px;background:none;color:var(--mute);font:inherit;font-weight:600}
+nav button.on{background:#eaf1ff;color:var(--blue)}
+section{display:none}section.on{display:block}
+.btn{width:100%;padding:16px;border:0;border-radius:18px;background:#0f172a;color:#fff;font:inherit;font-weight:800;margin-top:12px}
+.box{background:#fff;border:1px solid var(--line);border-radius:20px;padding:18px;margin-top:14px}
+.empty{text-align:center;padding:50px 10px;color:var(--mute)}.empty b{display:block;color:var(--ink);font-size:20px;margin-bottom:4px}
+.ord{display:flex;justify-content:space-between;gap:8px;padding:12px 0;border-bottom:1px solid var(--line)}.ord:last-child{border:0}
+.gar{background:#ecfdf5;border:1px solid #a7f3d0;border-radius:20px;padding:16px;margin-top:14px;color:#065f46}.gar b{font-size:18px}
+details{border-bottom:1px solid var(--line);padding:14px 4px}details:last-child{border:0}summary{font-weight:700;cursor:pointer}details p{margin:8px 0 0;color:#475569}
+.err{color:#dc2626;margin:8px 2px}
+
+nav button.plus{flex:0 0 54px;height:54px;align-self:center;padding:0;border-radius:50%;background:var(--blue);color:#fff;font-size:30px;line-height:1;box-shadow:0 6px 14px #2563eb55}
+body.dk{--bg:#0a0a0d;--card:#1b1b22;--ink:#fff;--mute:#9aa0ae;--line:#2c2c36;background:#0a0a0d}
+body.dk .hd,body.dk nav{background:#14141a;border-color:#2c2c36}body.dk nav button.on{background:#262640;color:#8fb0ff}
+.bal{padding:6px 2px;color:var(--mute)}.bal b{color:#4da3ff;font-size:20px}
+.mt{font-size:26px;font-weight:800;margin:4px 0 14px}
+.meth{width:100%;display:flex;align-items:center;gap:14px;text-align:left;background:var(--card);border:1px solid var(--line);border-radius:18px;padding:14px;margin-bottom:12px;color:var(--ink);font:inherit}
+.logo{width:56px;height:56px;border-radius:16px;display:grid;place-items:center;color:#fff;font-weight:800;font-size:24px;flex:none}
+.meth b{display:block;font-size:20px}.meth small{color:var(--mute)}.meth em{margin-left:auto;font-style:normal;font-size:26px;color:var(--mute)}
+.top{display:flex;align-items:center;gap:10px;justify-content:space-between}
+.top button{background:#000;color:#fff;border:1px solid var(--line);border-radius:20px;padding:10px 16px;font:inherit}
+.gr{background:linear-gradient(135deg,#f97316,#e11d74);border-radius:22px;padding:16px;color:#fff;margin-top:14px}
+.gr ul{padding-left:20px;margin:10px 0}.gr li{margin:6px 0}
+.ban{background:#e8f0ee;color:#14302a;border-radius:16px;padding:10px;text-align:center;font-weight:700}.ban span{display:inline-block;margin:4px 8px;font-size:14px}
+.gr input{background:#ffffff30;border:1px solid #ffffff55;color:#fff;margin-top:8px;border-radius:14px}.gr input::placeholder{color:#ffffffbb}
+.num{display:flex;gap:8px;margin:8px 0}.num div{flex:1;background:#00000030;border-radius:14px;padding:12px;font-size:22px;font-weight:800;letter-spacing:1px}
+.num button{background:#00000030;color:#fff;border:0;border-radius:14px;padding:0 16px;font:inherit;font-weight:700}
+.vf{width:100%;margin-top:10px;padding:16px;border:0;border-radius:16px;background:#fff;color:#e11d74;font-size:18px;font-weight:800;letter-spacing:2px}
+.hist{display:flex;justify-content:space-between;align-items:center;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px;margin-bottom:10px}
+.hist b{font-size:22px}.hist small{color:var(--mute);display:block}.tag{border:1px solid #2563eb;color:#60a5fa;border-radius:8px;padding:6px 12px;font-size:13px;letter-spacing:1px}
+.tag.pending{border-color:#d97706;color:#fbbf24}.tag.rejected{border-color:#dc2626;color:#f87171}
+</style>
+</head>
+<body>
+<div class="hd"><div class="av" id="av"></div><div><b id="nm">Shop</b><small><span class="dot"></span>Online · Auto Payment</small></div><div class="ver">VERIFIED</div></div>
+
+<section id="buy" class="on in">
+  <h3>Player UID</h3>
+  <input id="uid" inputmode="numeric" placeholder="আপনার Free Fire UID লিখুন">
+  <div class="hint">কমপক্ষে ৮ ডিজিটের UID দিন</div>
+  <h3>Select Package</h3>
+  <div class="grid" id="pkgs"></div>
+  <h3>Payment</h3>
+  <div class="sum">
+    <div><span>সিলেক্টেড প্যাকেজ</span><b id="sp">—</b></div>
+    <div><span>মোট টাকা</span><span class="t" id="tp">০ ৳</span></div>
+    <div><span>আপনার ব্যালেন্স</span><b id="bal2">০ ৳</b></div>
+    <div class="note">ব্যালেন্স থেকে পেমেন্ট হবে। ব্যালেন্স কম হলে নিচের + বাটন দিয়ে Add Money করুন।</div>
+  </div>
+  <div class="err" id="err"></div>
+  <button class="go" id="pay" disabled>🚀 Proceed to Pay</button>
+</section>
+
+<section id="orders" class="in">
+  <h3>Check Status</h3>
+  <input id="q" inputmode="numeric" placeholder="অর্ডার নম্বর (ফাঁকা রাখলে সব অর্ডার)">
+  <button class="btn" onclick="loadOrders()">🔄 স্ট্যাটাস রিফ্রেশ করুন</button>
+  <div class="box" id="olist"></div>
+</section>
+
+<section id="help" class="in">
+  <h3>Support &amp; Security</h3>
+  <div class="box" style="text-align:center"><div style="font-size:40px">💬</div><b id="sup" style="font-size:20px">@admin</b>
+    <p style="color:var(--mute);margin:4px 0 12px">যেকোনো সমস্যায় সরাসরি এডমিনের সাথে কথা বলুন</p>
+    <button class="btn" style="background:var(--blue)" onclick="tg.openTelegramLink('https://t.me/'+SUP)">💬 সরাসরি এডমিনকে ইনবক্স করুন</button></div>
+  <div class="gar"><b>⏱ ডেলিভারি সময়</b><div>পেমেন্ট সফল হওয়ার পর অর্ডার প্রসেস করা হবে এবং ডেলিভারি হলে আপনি Telegram-এ মেসেজ পাবেন।</div></div>
+  <h3>FAQ</h3>
+  <div class="box" style="padding:6px 14px">
+    <details><summary>UID দিলে কি আমার অ্যাকাউন্ট নিরাপদ থাকবে?</summary><p>হ্যাঁ। শুধু UID লাগে, পাসওয়ার্ড বা লগইন তথ্য কখনো চাওয়া হয় না।</p></details>
+    <details><summary>ডায়মন্ড পেতে কত সময় লাগে?</summary><p>পেমেন্ট নিশ্চিত হওয়ার পর অর্ডার প্রসেস হয়। দেরি হলে সাপোর্টে জানান।</p></details>
+    <details><summary>পেমেন্ট হয়েছে কিন্তু স্ট্যাটাস পেন্ডিং দেখাচ্ছে কেন?</summary><p>গেটওয়ে নিশ্চিত করতে কিছুক্ষণ লাগে। রিফ্রেশ করুন, না বদলালে অর্ডার নম্বরসহ সাপোর্টে জানান।</p></details>
+    <details><summary>রিফান্ড পলিসি কী?</summary><p>ভুল UID-তে ডেলিভারি হলে রিফান্ড হয় না। অন্য সমস্যায় সাপোর্টে যোগাযোগ করুন।</p></details>
+  </div>
+</section>
+
+<section id="add" class="in">
+  <div id="a1">
+    <div class="bal">Balance: <b id="bal">৳0</b></div>
+    <h3 class="mt" style="text-transform:none;color:var(--ink);letter-spacing:0">Select Payment Method</h3>
+    <button class="meth" onclick="pickM('bkash')"><div class="logo" style="background:#e2136e">b</div><div><b>bKash</b><small>Personal Account</small></div><em>›</em></button>
+    <button class="meth" onclick="pickM('nagad')"><div class="logo" style="background:#f6821f">N</div><div><b>Nagad</b><small>Personal Account</small></div><em>›</em></button>
+    <h3 style="font-size:22px;color:var(--ink);letter-spacing:0">Deposit History</h3>
+    <div id="dh"></div>
+  </div>
+  <div id="a2" style="display:none">
+    <div class="top"><b class="mt" style="margin:0">Enter Transaction ID</b><button onclick="backM()">Change Method</button></div>
+    <div class="meth" style="margin-top:14px"><div class="logo" id="mlogo">b</div><div><b id="mname">bKash Personal</b><small>Personal Account</small></div></div>
+    <div class="gr">
+      <div class="ban">শুধুমাত্র সেন্ড মানি গ্রহণ করা হয়<br><span>✅ সেন্ড মানি</span><span>❌ পেমেন্ট</span><span>❌ মোবাইল রিচার্জ</span><span>❌ ক্যাশ আউট</span></div>
+      <ul><li id="dial"></li><li>"Send Money" অপশনে ট্যাপ করুন।</li><li>নিচের নম্বরটি দিন।</li></ul>
+      <div class="num"><div id="wno">—</div><button onclick="copyNo()">Copy</button></div>
+      <ul><li>সেন্ড মানি নিশ্চিত করে সম্পন্ন করুন।</li><li>নিচে পরিমাণ ও Transaction ID লিখে VERIFY চাপুন। যাচাইয়ের পর ব্যালেন্সে যোগ হবে।</li></ul>
+      <input id="damt" inputmode="numeric" placeholder="কত টাকা পাঠিয়েছেন (৳)">
+      <input id="dtrx" placeholder="Enter Transaction ID" autocapitalize="characters">
+      <div class="err" id="derr" style="color:#fff"></div>
+      <button class="vf" onclick="submitDep()">VERIFY</button>
+    </div>
+  </div>
+</section>
+
+<nav><button class="on" data-t="buy">📦<br>Packages</button><button class="plus" data-t="add" aria-label="Add Money">+</button><button data-t="orders">🧾<br>My Orders</button><button data-t="help">🛡<br>Support</button></nav>
+<script>
+const tg=Telegram.WebApp;tg.ready();tg.expand();
+const H={'Content-Type':'application/json','x-init-data':tg.initData};
+const $=id=>document.getElementById(id);
+const bn=n=>String(n).replace(/\d/g,d=>'০১২৩৪৫৬৭৮৯'[d]);
+const fmt=l=>Number(l)?Number(l).toLocaleString('en-US'):l;
+const ST={pending:'পেমেন্টের অপেক্ষায়',paid:'পেমেন্ট হয়েছে, প্রসেসিং',delivered:'ডেলিভারি হয়েছে ✅',failed:'ব্যর্থ',refunded:'রিফান্ড'};
+let sel=null,P=[],SUP='',CFG={},BAL=0,M=null;
+
+async function loadPkgs(){
+  P=await (await fetch('/api/packages')).json();
+  $('pkgs').innerHTML=P.map(p=>`<button class="pkg" data-id="${p.id}"><b>${fmt(p.label)}</b><i>DIAMONDS</i><span>${bn(p.price)}৳</span></button>`).join('')||'<p class="hint">এখন কোনো প্যাকেজ নেই</p>';
+}
+$('pkgs').onclick=e=>{const b=e.target.closest('.pkg');if(!b)return;
+  document.querySelectorAll('.pkg').forEach(x=>x.classList.remove('on'));b.classList.add('on');
+  sel=+b.dataset.id;const p=P.find(x=>x.id===sel);$('sp').textContent=fmt(p.label)+' ডায়মন্ড';$('tp').textContent=bn(p.price)+' ৳';check()};
+const check=()=>$('pay').disabled=!(sel&&/^\d{8,12}$/.test($('uid').value));
+$('uid').oninput=check;
+
+$('pay').onclick=async()=>{
+  $('pay').disabled=true;$('err').textContent='';
+  const r=await fetch('/api/orders/balance',{method:'POST',headers:H,body:JSON.stringify({uid:$('uid').value,packageId:sel})});
+  const j=await r.json();
+  if(!r.ok){$('err').textContent=j.error;check();return}
+  BAL=j.balance;$('bal2').textContent=bn(BAL)+' ৳';tg.showAlert('অর্ডার #'+j.orderId+' হয়েছে ✅ ডেলিভারি হলে মেসেজ পাবেন।');
+  document.querySelector('nav [data-t=orders]').click();
+};
+
+async function loadOrders(){
+  const r=await fetch('/api/my-orders',{headers:H});let l=await r.json();
+  const q=$('q').value.trim();if(q)l=l.filter(o=>String(o.id)===q);
+  $('olist').innerHTML=l.length?l.map(o=>`<div class="ord"><div><b>#${o.id}</b> ${fmt(o.label)} ডায়মন্ড<br><small style="color:var(--mute)">UID ${o.game_uid}</small></div><div style="text-align:right;font-size:14px">${ST[o.status]||o.status}</div></div>`).join(''):'<div class="empty"><b>কোনো অর্ডার নেই</b>স্ট্যাটাস আনা যায়নি। আবার চেষ্টা করুন।</div>';
+}
+document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>{
+  document.querySelectorAll('nav button,section').forEach(x=>x.classList.remove('on'));
+  b.classList.add('on');$(b.dataset.t).classList.add('on');
+  $('pay').style.display=b.dataset.t==='buy'?'':'none';
+  document.body.classList.toggle('dk',b.dataset.t==='add');
+  if(b.dataset.t==='orders')loadOrders();
+  if(b.dataset.t==='add'){backM();loadMe()}
+});
+fetch('/api/config').then(r=>r.json()).then(c=>{CFG=c;SUP=c.support;$('sup').textContent='@'+c.support;$('nm').textContent=c.name;$('av').textContent=c.name.slice(0,1).toUpperCase();document.title=c.name});
+const MN={bkash:{n:'bKash',dial:'*247#',c:'#e2136e'},nagad:{n:'Nagad',dial:'*167#',c:'#f6821f'}};
+function pickM(m){M=m;$('a1').style.display='none';$('a2').style.display='block';$('derr').textContent='';
+  $('mname').textContent=MN[m].n+' Personal';$('dial').textContent=`${MN[m].dial} ডায়াল করুন অথবা ${MN[m].n} অ্যাপ খুলুন।`;
+  $('wno').textContent=CFG[m]||'—';$('mlogo').style.background=MN[m].c;$('mlogo').textContent=MN[m].n[0]}
+function backM(){$('a1').style.display='block';$('a2').style.display='none'}
+async function copyNo(){try{await navigator.clipboard.writeText($('wno').textContent);tg.showAlert('নম্বর কপি হয়েছে')}catch{tg.showAlert($('wno').textContent)}}
+async function loadMe(){
+  const r=await fetch('/api/me',{headers:H});if(!r.ok)return;const j=await r.json();BAL=j.balance;
+  $('bal').textContent='৳'+j.balance;$('bal2').textContent=bn(j.balance)+' ৳';
+  $('dh').innerHTML=j.deposits.map(d=>`<div class="hist"><div><b>৳${d.amount}</b><small>${MN[d.method].n} · ${d.created_at.slice(0,10)}</small></div><span class="tag ${d.status}">${d.status.toUpperCase()}</span></div>`).join('')||'<p class="hint">এখনো কোনো ডিপোজিট নেই</p>';
+}
+async function submitDep(){
+  $('derr').textContent='';
+  const r=await fetch('/api/deposits',{method:'POST',headers:H,body:JSON.stringify({method:M,amount:$('damt').value,trxId:$('dtrx').value})});
+  const j=await r.json();if(!r.ok){$('derr').textContent=j.error;return}
+  $('damt').value=$('dtrx').value='';tg.showAlert('জমা হয়েছে। যাচাইয়ের পর ব্যালেন্সে যোগ হবে।');backM();loadMe();
+}
+loadPkgs();loadMe();
+</script>
+</body>
+</html>
