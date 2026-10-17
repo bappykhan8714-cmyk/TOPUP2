@@ -21,6 +21,7 @@ CREATE TABLE IF NOT EXISTS users(tg_id TEXT PRIMARY KEY, balance INTEGER DEFAULT
 CREATE TABLE IF NOT EXISTS deposits(id INTEGER PRIMARY KEY, tg_id TEXT, method TEXT, amount INTEGER, trx_id TEXT UNIQUE,
   status TEXT DEFAULT 'pending', created_at TEXT DEFAULT CURRENT_TIMESTAMP);
 `);
+db.exec(`CREATE TABLE IF NOT EXISTS settings(key TEXT PRIMARY KEY, value TEXT);`);
 const app = express();
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
@@ -55,7 +56,27 @@ async function notify(chatId, text, extra = {}) {
 }
 
 // ---- Public API ----
-app.get('/api/config', (_, res) => res.json({ support: SUPPORT_USERNAME, name: process.env.SHOP_NAME || 'Diamond Shop', bkash: process.env.BKASH_NUMBER || '', nagad: process.env.NAGAD_NUMBER || '' }));
+// ---- Editable shop settings (controlled from admin panel) ----
+const SETTING_KEYS = ['shop_name', 'avatar', 'support', 'bkash', 'nagad', 'notice', 'delivery_note', 'faq', 'min_deposit', 'max_deposit'];
+const DEFAULTS = {
+  shop_name: process.env.SHOP_NAME || 'Diamond Shop', avatar: '', support: SUPPORT_USERNAME,
+  bkash: process.env.BKASH_NUMBER || '', nagad: process.env.NAGAD_NUMBER || '', notice: '',
+  delivery_note: 'পেমেন্ট সফল হওয়ার পর অর্ডার প্রসেস করা হবে এবং ডেলিভারি হলে আপনি Telegram-এ মেসেজ পাবেন।',
+  faq: 'UID দিলে কি আমার অ্যাকাউন্ট নিরাপদ থাকবে?|হ্যাঁ। শুধু UID লাগে, পাসওয়ার্ড বা লগইন তথ্য কখনো চাওয়া হয় না।\nডায়মন্ড পেতে কত সময় লাগে?|পেমেন্ট নিশ্চিত হওয়ার পর অর্ডার প্রসেস হয়। দেরি হলে সাপোর্টে জানান।\nপেমেন্ট হয়েছে কিন্তু স্ট্যাটাস পেন্ডিং কেন?|যাচাই করতে কিছুক্ষণ লাগে। রিফ্রেশ করুন, না বদলালে সাপোর্টে জানান।\nরিফান্ড পলিসি কী?|ভুল UID-তে ডেলিভারি হলে রিফান্ড হয় না। অন্য সমস্যায় সাপোর্টে যোগাযোগ করুন।',
+  min_deposit: '10', max_deposit: '50000',
+};
+function getSettings() {
+  const s = { ...DEFAULTS };
+  for (const r of db.prepare('SELECT key,value FROM settings').all()) if (SETTING_KEYS.includes(r.key)) s[r.key] = r.value;
+  return s;
+}
+app.get('/api/config', (_, res) => { const s = getSettings(); res.json({ ...s, name: s.shop_name }); });
+app.get('/api/admin/settings', needAdmin, (_, res) => res.json(getSettings()));
+app.post('/api/admin/settings', needAdmin, (req, res) => {
+  const up = db.prepare('INSERT INTO settings(key,value) VALUES(?,?) ON CONFLICT(key) DO UPDATE SET value=excluded.value');
+  db.transaction(() => { for (const k of SETTING_KEYS) if (k in req.body) up.run(k, String(req.body[k]).slice(0, 4000)); })();
+  res.json({ ok: true });
+});
 app.get('/api/packages', (_, res) =>
   res.json(db.prepare('SELECT id,label,price FROM packages WHERE active=1 ORDER BY sort,id').all()));
 
@@ -143,7 +164,10 @@ app.post('/api/deposits', needUser, (req, res) => {
   const amount = parseInt(req.body.amount, 10);
   const trx = String(req.body.trxId || '').trim().toUpperCase();
   if (!['bkash', 'nagad'].includes(method)) return res.status(400).json({ error: 'পেমেন্ট মেথড ভুল' });
-  if (!(amount >= 10 && amount <= 50000)) return res.status(400).json({ error: 'পরিমাণ ১০ থেকে ৫০,০০০ টাকার মধ্যে দিন' });
+  const cfg = getSettings();
+  if (!cfg[method]) return res.status(400).json({ error: 'এই পেমেন্ট মেথড এখন বন্ধ আছে' });
+  const lo = parseInt(cfg.min_deposit, 10) || 10, hi = parseInt(cfg.max_deposit, 10) || 50000;
+  if (!(amount >= lo && amount <= hi)) return res.status(400).json({ error: `পরিমাণ ${lo} থেকে ${hi} টাকার মধ্যে দিন` });
   if (!/^[A-Z0-9]{8,12}$/.test(trx)) return res.status(400).json({ error: 'সঠিক TrxID দিন' });
   try {
     const i = db.prepare('INSERT INTO deposits(tg_id,method,amount,trx_id) VALUES(?,?,?,?)').run(String(req.tg.id), method, amount, trx);
